@@ -1,0 +1,16 @@
+{
+  "name": "dowinn",
+  "private": true,
+  "version": "0.1.0",
+  "packageManager": "pnpm@10.18.3",
+  "scripts": {
+    "dev": "pnpm -r --parallel --stream dev",
+    "build": "pnpm -r build",
+    "lint": "pnpm -r lint",
+    "test": "pnpm -r test",
+    "typecheck": "pnpm -r typecheck",
+    "db:up": "bash scripts/docker-compose.sh up -d",
+    "db:down": "bash scripts/docker-compose.sh down",
+    "db:logs": "bash scripts/docker-compose.sh logs -f mysql"
+  }
+}
