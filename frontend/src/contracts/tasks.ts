@@ -1,0 +1,192 @@
+export type {
+  ProjectStatusColor,
+  TaskLogAssigneeValue,
+  TaskLogEventType,
+  TaskLogValue,
+} from "@/contracts/workflow";
+import type {
+  ProjectStatusColor,
+  TaskLogEventType,
+  TaskLogValue,
+} from "@/contracts/workflow";
+
+export type TaskStatus = {
+  id: string;
+  name: string;
+  position: number;
+  isClosed: boolean;
+  color: ProjectStatusColor;
+};
+
+export type TaskLink = {
+  id: string;
+  label: string;
+  url: string;
+  position: number;
+};
+
+export type TaskChecklistItem = {
+  id: string;
+  label: string;
+  isCompleted: boolean;
+  position: number;
+};
+
+export type TaskSubtask = {
+  id: string;
+  title: string;
+  description: string | null;
+  statusId: string;
+  status: TaskStatus;
+  assigneeId: string | null;
+  dueDate: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type TaskCard = {
+  id: string;
+  projectId: string;
+  title: string;
+  description: string | null;
+  acceptanceCriteria: string | null;
+  notes: string | null;
+  parentTaskId: string | null;
+  statusId: string;
+  status: TaskStatus;
+  position: number | null;
+  assigneeId: string | null;
+  dueDate: string | null;
+  links: TaskLink[];
+  checklistItems: TaskChecklistItem[];
+  subtasks: TaskSubtask[];
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type ProjectTaskStatus = TaskStatus & {
+  tasks: TaskCard[];
+};
+
+export type ProjectTasksResponse = {
+  statuses: ProjectTaskStatus[];
+};
+
+export type CreateTaskRequest = {
+  title: string;
+  statusId?: string;
+  description?: string;
+  acceptanceCriteria?: string;
+  notes?: string;
+  parentTaskId?: string;
+  assigneeId?: string;
+  dueDate?: string;
+  links?: Array<{
+    label: string;
+    url: string;
+  }>;
+  checklistItems?: Array<{
+    label: string;
+    isCompleted?: boolean;
+  }>;
+};
+
+export type UpdateTaskRequest = {
+  title?: string;
+  description?: string | null;
+  acceptanceCriteria?: string | null;
+  notes?: string | null;
+  assigneeId?: string | null;
+  dueDate?: string | null;
+  links?: Array<{
+    label: string;
+    url: string;
+  }>;
+  checklistItems?: Array<{
+    label: string;
+    isCompleted?: boolean;
+  }>;
+};
+
+export type UpdateTaskStatusRequest = {
+  statusId: string;
+  position?: number | null;
+};
+
+export type DeleteTaskResponse = {
+  message: string;
+};
+
+export type TaskActionResponse = {
+  message: string;
+};
+
+export type TaskLogEntry = {
+  id: string;
+  eventType: TaskLogEventType;
+  fieldName: string | null;
+  oldValue: TaskLogValue;
+  newValue: TaskLogValue;
+  summary: string;
+  actor: {
+    id: string;
+    name: string;
+  };
+  createdAt: string;
+};
+
+export type TaskLogsResponse = {
+  items: TaskLogEntry[];
+  page: number;
+  pageSize: number;
+  hasMore: boolean;
+};
+
+export type TaskComment = {
+  id: string;
+  body: string;
+  createdAt: string;
+  updatedAt: string;
+  author: {
+    id: string;
+    name: string;
+  };
+};
+
+export type TaskCommentsResponse = {
+  items: TaskComment[];
+};
+
+export type CreateTaskCommentRequest = {
+  body: string;
+};
+
+export type UpdateTaskCommentRequest = {
+  body: string;
+};
+
+export type TaskAttachment = {
+  id: string;
+  label: string | null;
+  fileName: string;
+  url: string;
+  mimeType: string | null;
+  sizeBytes: number | null;
+  createdAt: string;
+  createdBy: {
+    id: string;
+    name: string;
+  };
+};
+
+export type TaskAttachmentsResponse = {
+  items: TaskAttachment[];
+};
+
+export type CreateTaskAttachmentRequest = {
+  label: string;
+  fileName: string;
+  url: string;
+  mimeType?: string | null;
+  sizeBytes?: number | null;
+};
