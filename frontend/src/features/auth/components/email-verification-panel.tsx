@@ -2,7 +2,7 @@
 
 import type { Route } from "next";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { CheckCircle2, LoaderCircle, MailCheck, RefreshCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -24,14 +24,14 @@ export function EmailVerificationPanel({
   const router = useRouter();
   const confirmMutation = useConfirmEmailVerification();
   const resendMutation = useResendVerification();
-  const [hasAttemptedAutoConfirm, setHasAttemptedAutoConfirm] = useState(false);
+  const hasAttemptedAutoConfirm = useRef(false);
 
   useEffect(() => {
-    if (!token || hasAttemptedAutoConfirm) {
+    if (!token || hasAttemptedAutoConfirm.current) {
       return;
     }
 
-    setHasAttemptedAutoConfirm(true);
+    hasAttemptedAutoConfirm.current = true;
     void confirmMutation
       .mutateAsync({ token })
       .then((response) => {
@@ -52,7 +52,6 @@ export function EmailVerificationPanel({
   }, [
     confirmMutation,
     email,
-    hasAttemptedAutoConfirm,
     nextPath,
     router,
     token,
