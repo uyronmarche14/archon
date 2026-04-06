@@ -61,7 +61,7 @@ export function InviteMemberDialog({ projectId }: InviteMemberDialogProps) {
       }
 
       setInviteResult(null);
-      showSuccessToast("Invite created", `Access is ready for ${response.email}.`);
+      showSuccessToast("Invite sent", `Invitation sent to ${response.email}.`);
       setOpen(false);
       setEmail("");
     } catch (error) {
@@ -130,8 +130,9 @@ export function InviteMemberDialog({ projectId }: InviteMemberDialogProps) {
           </div>
           <DialogTitle>Invite a member</DialogTitle>
           <DialogDescription>
-            Create a project invite for a teammate. This main flow uses direct invite links,
-            and existing Archon accounts will also see matching invites inside the app after login.
+            Create a project invite for a teammate. Email delivery is the main path on this
+            branch, and matching existing Archon accounts will also see invites inside the app
+            after login.
           </DialogDescription>
         </DialogHeader>
 
@@ -180,7 +181,7 @@ export function InviteMemberDialog({ projectId }: InviteMemberDialogProps) {
                 <Label htmlFor="invite-email">Email</Label>
                 <p className="text-xs leading-5 text-muted-foreground">
                   Invite the teammate by work email so the generated access path stays tied to the
-                  right account and appears in their dashboard after login.
+                  right account, arrives in their inbox, and appears in their dashboard after login.
                 </p>
               </div>
               <div className="space-y-1.5">
@@ -199,8 +200,8 @@ export function InviteMemberDialog({ projectId }: InviteMemberDialogProps) {
                   <p className="text-xs text-destructive">{fieldError}</p>
                 ) : (
                   <p className="text-xs text-muted-foreground">
-                    Archon will generate a direct invite link for this teammate. Matching existing
-                    accounts will also see the invite inside the workspace.
+                    Archon will send the invite by email when delivery is configured. Matching
+                    existing accounts will also see the invite inside the workspace.
                   </p>
                 )}
               </div>

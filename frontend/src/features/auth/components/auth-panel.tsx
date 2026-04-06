@@ -116,12 +116,15 @@ export function AuthPanel({ mode }: AuthPanelProps) {
         redirectPath: nextPath,
       });
 
-      showSuccessToast(
-        "Account created",
-        signupResponse.emailVerificationRequired
-          ? "Your account is ready. Continue to login to enter the workspace."
-          : signupResponse.message,
-      );
+      if (signupResponse.emailVerificationRequired) {
+        showSuccessToast("Check your inbox", signupResponse.message);
+        router.replace(
+          `/verify-email?email=${encodeURIComponent(signupResponse.email)}&next=${encodeURIComponent(nextPath)}` as Route,
+        );
+        return;
+      }
+
+      showSuccessToast("Account created", signupResponse.message);
       router.replace(
         `/login?email=${encodeURIComponent(signupResponse.email)}&next=${encodeURIComponent(nextPath)}` as Route,
       );
@@ -131,6 +134,25 @@ export function AuthPanel({ mode }: AuthPanelProps) {
 
         if (Object.keys(nextFieldErrors).length > 0) {
           setFieldErrors(nextFieldErrors);
+        }
+
+        if (
+          mode === "login" &&
+          error.details?.needsVerification === true
+        ) {
+          const nextEmail =
+            typeof error.details.email === "string" && error.details.email.length > 0
+              ? error.details.email
+              : normalizedValues.email;
+
+          showInfoToast(
+            "Verify your email",
+            "Finish email verification before logging in to your workspace.",
+          );
+          router.replace(
+            `/verify-email?email=${encodeURIComponent(nextEmail)}&next=${encodeURIComponent(nextPath)}` as Route,
+          );
+          return;
         }
 
         setFormError(error.message);
@@ -288,7 +310,7 @@ export function AuthPanel({ mode }: AuthPanelProps) {
                 </p>
               </div>
               <p className="text-xs leading-6 text-muted-foreground">
-                New accounts can continue straight into the workspace flow and join projects from direct links or in-app invites.
+                New accounts verify by email before first login, then continue into the workspace and invite flow.
               </p>
             </div>
           ) : (

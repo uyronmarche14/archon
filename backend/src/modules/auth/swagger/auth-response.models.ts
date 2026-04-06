@@ -45,7 +45,7 @@ export class SwaggerAuthSessionResponseDto {
 
 export class SwaggerSignupResponseDto {
   @ApiProperty({
-    example: 'Account created successfully. You can log in now.',
+    example: 'Check your email to verify your account',
   })
   message!: string;
 
@@ -55,7 +55,7 @@ export class SwaggerSignupResponseDto {
   email!: string;
 
   @ApiProperty({
-    example: false,
+    example: true,
     description:
       'Whether the account still needs an email verification step before login.',
   })

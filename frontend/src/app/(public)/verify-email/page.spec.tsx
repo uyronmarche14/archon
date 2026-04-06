@@ -1,39 +1,54 @@
+import { render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import VerifyEmailPage from "./page";
 
-const redirectMock = vi.hoisted(() => vi.fn());
+const emailVerificationPanelMock = vi.hoisted(() => vi.fn());
 
-vi.mock("next/navigation", () => ({
-  redirect: redirectMock,
+vi.mock("@/features/auth/components/email-verification-panel", () => ({
+  EmailVerificationPanel: emailVerificationPanelMock,
 }));
 
 describe("VerifyEmailPage", () => {
+  const tokenField = "token";
+
   beforeEach(() => {
-    redirectMock.mockReset();
-    redirectMock.mockImplementation(() => {
-      throw new Error("NEXT_REDIRECT");
-    });
+    emailVerificationPanelMock.mockReset();
+    emailVerificationPanelMock.mockImplementation(
+      ({ email, token, nextPath }: { email: string | null; token: string | null; nextPath: string }) => (
+        <div>
+          <span>{email ?? "no-email"}</span>
+          <span>{token ?? "no-token"}</span>
+          <span>{nextPath}</span>
+        </div>
+      ),
+    );
   });
 
-  it("redirects to login with the normalized email when one is provided", async () => {
-    await expect(
-      VerifyEmailPage({
+  it("passes normalized email, token, and next path into the verification panel", async () => {
+    render(
+      await VerifyEmailPage({
         searchParams: Promise.resolve({
           email: "  Jane@Example.com  ",
+          [tokenField]: " verify-token ",
+          next: "/app/projects/project-1",
         }),
       }),
-    ).rejects.toThrow("NEXT_REDIRECT");
+    );
 
-    expect(redirectMock).toHaveBeenCalledWith("/login?email=jane%40example.com");
+    expect(screen.getByText("Jane@Example.com")).toBeInTheDocument();
+    expect(screen.getByText("verify-token")).toBeInTheDocument();
+    expect(screen.getByText("/app/projects/project-1")).toBeInTheDocument();
   });
 
-  it("redirects to login when no email query is present", async () => {
-    await expect(
-      VerifyEmailPage({
+  it("falls back to the app dashboard when no next path is provided", async () => {
+    render(
+      await VerifyEmailPage({
         searchParams: Promise.resolve({}),
       }),
-    ).rejects.toThrow("NEXT_REDIRECT");
+    );
 
-    expect(redirectMock).toHaveBeenCalledWith("/login");
+    expect(screen.getByText("no-email")).toBeInTheDocument();
+    expect(screen.getByText("no-token")).toBeInTheDocument();
+    expect(screen.getByText("/app")).toBeInTheDocument();
   });
 });

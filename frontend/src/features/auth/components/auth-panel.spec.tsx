@@ -1,6 +1,7 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AuthPanel } from "@/features/auth/components/auth-panel";
+import { ApiClientError } from "@/services/http/api-client-error";
 
 const replaceMock = vi.hoisted(() => vi.fn());
 const searchParamsState = vi.hoisted(
@@ -57,7 +58,7 @@ describe("AuthPanel", () => {
     });
   });
 
-  it("routes back to login even if the backend says verification is still required", async () => {
+  it("routes signup into email verification when the backend requires it", async () => {
     const mutateAsync = vi.fn().mockResolvedValue({
       message: "Check your email to verify your account",
       email: "jane@example.com",
@@ -83,15 +84,14 @@ describe("AuthPanel", () => {
 
     await waitFor(() => {
       expect(replaceMock).toHaveBeenCalledWith(
-        "/login?email=jane%40example.com&next=%2Fapp%2Fprojects%2Fproject-1",
+        "/verify-email?email=jane%40example.com&next=%2Fapp%2Fprojects%2Fproject-1",
       );
     });
 
     expect(showSuccessToastMock).toHaveBeenCalledWith(
-      "Account created",
-      "Your account is ready. Continue to login to enter the workspace.",
+      "Check your inbox",
+      "Check your email to verify your account",
     );
-    expect(screen.queryByText(/check your inbox/i)).not.toBeInTheDocument();
   });
 
   it("redirects back to login when signup completes with verification bypassed", async () => {
@@ -128,6 +128,43 @@ describe("AuthPanel", () => {
       "Account created",
       "Account created successfully. You can log in now.",
     );
-    expect(screen.queryByText(/check your inbox/i)).not.toBeInTheDocument();
+  });
+
+  it("routes login attempts with pending verification to the verify-email page", async () => {
+    const mutateAsync = vi.fn().mockRejectedValue(new ApiClientError({
+      message: "Email verification is required before login",
+      details: {
+        needsVerification: true,
+        email: "jane@example.com",
+      },
+      requestId: "req_123",
+      status: 403,
+      code: "EMAIL_VERIFICATION_REQUIRED",
+    }));
+    useLoginMock.mockReturnValue({
+      isPending: false,
+      mutateAsync,
+    });
+
+    render(<AuthPanel mode="login" />);
+
+    fireEvent.change(screen.getByLabelText(/^email$/i), {
+      target: { value: "jane@example.com" },
+    });
+    fireEvent.change(screen.getByLabelText(/password/i), {
+      target: { value: "StrongPass1" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /log in/i }));
+
+    await waitFor(() => {
+      expect(replaceMock).toHaveBeenCalledWith(
+        "/verify-email?email=jane%40example.com&next=%2Fapp%2Fprojects%2Fproject-1",
+      );
+    });
+
+    expect(showInfoToastMock).toHaveBeenCalledWith(
+      "Verify your email",
+      "Finish email verification before logging in to your workspace.",
+    );
   });
 });

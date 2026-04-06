@@ -67,7 +67,7 @@ describe("InviteMemberDialog", () => {
     });
   });
 
-  it("keeps a neutral success flow when invites are delivered by email", async () => {
+  it("shows the email-first success flow when invites are delivered by email", async () => {
     const mutateAsync = vi.fn().mockResolvedValue({
       message: "Invite sent successfully",
       email: "alex@example.com",
@@ -89,8 +89,8 @@ describe("InviteMemberDialog", () => {
 
     await waitFor(() => {
       expect(showSuccessToastMock).toHaveBeenCalledWith(
-        "Invite created",
-        "Access is ready for alex@example.com.",
+        "Invite sent",
+        "Invitation sent to alex@example.com.",
       );
     });
 

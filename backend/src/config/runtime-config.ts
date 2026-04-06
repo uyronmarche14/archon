@@ -63,9 +63,9 @@ export function getAppRuntimeConfig(
       (nodeEnv === 'production' ? 1 : 0),
     emailVerificationMode:
       configService.get<EmailVerificationMode>('EMAIL_VERIFICATION_MODE') ??
-      'bypass',
+      'required',
     inviteDeliveryMode:
-      configService.get<InviteDeliveryMode>('INVITE_DELIVERY_MODE') ?? 'link',
+      configService.get<InviteDeliveryMode>('INVITE_DELIVERY_MODE') ?? 'email',
   };
 }
 

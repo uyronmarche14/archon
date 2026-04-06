@@ -9,7 +9,7 @@ activity, and reviewer demo seeding.
 The backend owns:
 
 - signup, login, refresh rotation, logout, and current-user session APIs
-- direct-link invite flows and optional email-delivery support when explicitly enabled
+- email verification and email-delivered invite flows, with optional direct-link and bypass modes available when explicitly enabled
 - project CRUD, membership checks, project statuses, and project activity
 - task CRUD, task status changes, comments, attachments, and audit logs
 - non-production reviewer/demo seeding through a gated seed endpoint
@@ -26,7 +26,7 @@ The API is exposed under `/api/v1` and includes Swagger documentation when
 - `class-validator` and `class-transformer`
 - `joi` environment validation
 - JWT access tokens and refresh-token rotation
-- optional dormant mail support via Resend or SMTP when email flows are explicitly re-enabled
+- mail support via Resend or SMTP for verification and invite delivery
 
 ## Local Defaults
 
@@ -50,21 +50,23 @@ Important environment variables:
 - `SEED_ENABLED`
 - `EMAIL_VERIFICATION_MODE`
 - `INVITE_DELIVERY_MODE`
-- optional `MAIL_PROVIDER`
-- optional `MAIL_FROM`
-- optional `RESEND_API_KEY` if you later re-enable email delivery
-- optional SMTP variables if you later re-enable email delivery
+- `MAIL_PROVIDER`
+- `MAIL_FROM`
+- `RESEND_API_KEY` if you use Resend
+- optional SMTP variables if you use SMTP instead
 
-Hosted staging recommendation:
+Email-enabled defaults on this branch:
 
-- `EMAIL_VERIFICATION_MODE=bypass`
-- `INVITE_DELIVERY_MODE=link`
+- `EMAIL_VERIFICATION_MODE=required`
+- `INVITE_DELIVERY_MODE=email`
 
-That combination keeps signup and invites working on Render/Vercel staging even
-when real email delivery is unavailable. The checked-in runtime defaults now
-match that no-email flow. If you want to re-enable email later, explicitly set
-`EMAIL_VERIFICATION_MODE=required` and `INVITE_DELIVERY_MODE=email`.
-No-email deployments can omit all `MAIL_*`, `RESEND_*`, and `SMTP_*` variables.
+Recommended hosted setup:
+
+- `MAIL_PROVIDER=resend` for HTTPS-based delivery on hosted platforms
+- or SMTP if you control the relay and outbound delivery
+
+If you ever want a no-email deployment from this branch, explicitly set
+`EMAIL_VERIFICATION_MODE=bypass` and `INVITE_DELIVERY_MODE=link`.
 
 ## Run Locally
 
@@ -153,10 +155,11 @@ pnpm build
 
 ## Known Issues / Incomplete Functionality
 
-- On Render free tier, outbound SMTP ports are blocked. If you ever re-enable
-  email delivery, prefer Resend over HTTPS instead of Gmail SMTP.
-- Dormant verification and invite email endpoints remain implemented for
-  compatibility, but the default product flow does not use them.
+- On Render free tier, outbound SMTP ports are blocked. Prefer Resend over HTTPS
+  instead of Gmail SMTP.
+- If you expose the backend through Cloudflare Tunnel or another reverse proxy,
+  keep `APP_URL`, `FRONTEND_URL`, `REFRESH_COOKIE_SECURE`, and `TRUST_PROXY_HOPS`
+  aligned with your public HTTPS endpoints.
 - This package does not currently expose a dedicated standalone `typecheck`
   script. Lint, tests, and build are the main verification steps.
 
