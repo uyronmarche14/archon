@@ -1,0 +1,37 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "ignoreFiles": [
+    "backend/prisma.config.ts"
+  ],
+  "workspaces": {
+    "backend": {
+      "prisma": false,
+      "ignoreDependencies": [
+        "dotenv"
+      ],
+      "entry": [
+        "src/main.ts",
+        "test/**/*.ts"
+      ],
+      "project": [
+        "prisma.config.ts",
+        "src/**/*.ts",
+        "test/**/*.ts"
+      ]
+    },
+    "frontend": {
+      "ignoreDependencies": [
+        "shadcn",
+        "tailwindcss",
+        "tw-animate-css"
+      ],
+      "entry": [
+        "src/app/**/*.{ts,tsx}",
+        "src/**/*.{spec,test}.{ts,tsx}"
+      ],
+      "project": [
+        "src/**/*.{ts,tsx}"
+      ]
+    }
+  }
+}

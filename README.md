@@ -12,8 +12,7 @@ This repository contains the DOWINN full-stack assessment build. It includes:
 
 DOWINN is a compact project workspace app built around four main surfaces:
 
-1. Public and auth flows: landing, signup, login, email verification, and
-   invite entry
+1. Public and auth flows: landing, signup, login, and invite entry
 2. Projects dashboard: project discovery, creation, counts, and navigation
 3. Project board workspace: a Kanban-style board for one project
 4. Task collaboration detail: a task drawer with comments, attachments,
@@ -42,7 +41,7 @@ project-specific and can be managed per project.
 - Prisma ORM
 - MySQL / MariaDB
 - JWT access tokens and refresh-token rotation
-- SMTP-ready mail abstraction for verification and invites
+- dormant optional mail abstraction for legacy verification and email invite compatibility
 
 ## Repository Layout
 
@@ -158,7 +157,22 @@ pnpm lint
 pnpm test
 pnpm build
 pnpm -C frontend typecheck
+pnpm knip
 ```
+
+## Dead-Code Audit
+
+The workspace now includes a root-level `pnpm knip` audit to catch unused files,
+exports, and dependencies across `backend/` and `frontend/`.
+
+- `pnpm knip` focuses on high-signal file and dependency issues
+- `pnpm knip:exports` is available for a broader export-level audit when needed
+
+Current intentional keep items:
+
+- dormant backend mail and verify-email API paths for compatibility
+- DTO validation sentinel fields such as `atLeastOneField`
+- framework-wired entry points in Next.js routes and Nest modules/controllers
 
 ## Workspace Notes
 

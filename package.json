@@ -12,5 +12,8 @@
     "db:up": "bash scripts/docker-compose.sh up -d",
     "db:down": "bash scripts/docker-compose.sh down",
     "db:logs": "bash scripts/docker-compose.sh logs -f mysql"
+  },
+  "devDependencies": {
+    "knip": "^6.3.0"
   }
 }
