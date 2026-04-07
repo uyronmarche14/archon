@@ -1,84 +1,170 @@
-# DOWINN Frontend
+# Archon Frontend
 
-This package contains the Next.js frontend for DOWINN. It is the user-facing
-application for authentication, project discovery, the project board
-workspace, and the task collaboration drawer.
+This package contains the Next.js frontend for Archon. It is the user-facing application for public landing/auth routes, protected workspace navigation, project dashboards, project boards, task interactions, invite review, and notification surfaces.
 
-## Project Overview
+This README documents the current `main` branch behavior. On this branch, the frontend follows the no-email default product flow:
 
-The frontend is organized around four main product surfaces:
+- signup routes back to login
+- `/verify-email` redirects to login
+- invites are link-first in the UI
+- matching authenticated users also see pending invites inside the app
 
-1. Public and auth flows: landing, signup, login, email verification, and
-   invite entry
-2. Projects dashboard: project discovery, creation, counts, and navigation
-3. Project board workspace: the Kanban-style work area for a single project
-4. Task collaboration detail: a task drawer with comments, attachments,
-   subtasks, and audit history
+For the repo-wide overview, see [../README.md](../README.md).
 
-Core responsibilities include:
+## Overview
 
-- rendering public pages and protected app routes
-- loading project and task data from the backend API
-- managing board filters, sorting, and workspace interactions
-- handling task create, edit, move, and detail review flows
-- showing resilient loading, empty, and error states
+The frontend is split into two main route groups:
 
-## Stack
+- public routes under `src/app/(public)`
+- protected workspace routes under `src/app/(app)/app`
+
+### Public surface
+
+The public surface includes:
+
+- landing page
+- login
+- signup
+- invite review page
+- `/verify-email` redirect route
+
+The login and signup screens share the same auth panel component. Google OAuth is intentionally not implemented in this build; the UI explicitly marks it unavailable.
+
+### Protected workspace
+
+The protected workspace includes:
+
+- dashboard at `/app`
+- project boards at `/app/projects/[projectId]`
+- workspace sidebar and account chrome
+- notification bell for pending invites and assignment notifications
+
+Protected routes are wrapped with:
+
+- `AuthSessionProvider`
+- `ProtectedAppShell`
+- `AppShellChrome`
+
+The frontend redirects anonymous users to `/login?next=...`.
+
+## Core Responsibilities
+
+- render public and authenticated app routes
+- bootstrap session state from `/auth/me` and `/auth/refresh`
+- manage the in-memory access token lifecycle
+- load projects, project detail, grouped tasks, activity, invites, and notifications from the backend
+- provide dashboard and board interactions
+- handle project creation/edit/delete flows
+- handle task create/update/move/comment/attachment flows
+- present resilient loading, empty, and error states
+
+## Current Product Behavior On `main`
+
+### Auth
+
+- login uses email/password
+- signup creates an account, then routes back to login with the email prefilled
+- `/verify-email` does not render a verification workflow; it redirects to login
+- session recovery uses a refresh cookie and an in-memory access token
+
+### Invites
+
+- invite creation is link-first in the current app flow
+- invite review is public
+- invite acceptance requires authentication
+- the signed-in account email must match the invite email
+- pending invites appear on the dashboard and in the notification bell when the invite email matches the current user
+
+### Projects and boards
+
+- dashboard lists the visible projects for the current user
+- project creators become owners automatically
+- owners/admins can edit projects, invite members, and manage statuses
+- members can still work inside boards and tasks
+
+## Project Structure
+
+```text
+frontend/
+├── src/app/                  # Next App Router routes and layouts
+├── src/components/           # shared chrome and UI primitives
+├── src/contracts/            # frontend API contracts
+├── src/features/             # feature-oriented UI, hooks, and services
+├── src/lib/                  # shared config and helpers
+├── src/providers/            # top-level app providers
+└── src/services/http/        # axios client, token store, API base URL
+```
+
+Feature areas:
+
+- `features/auth` — login/signup UI, auth hooks, session provider, protected shell
+- `features/projects` — dashboard, project editor, invites, project members
+- `features/project-board` — board controller, board shell, activity feed
+- `features/tasks` — task drawer, comments, attachments, logs, task notifications
+- `features/notifications` — notification aggregation and rendering
+- `features/public` — landing page sections
+
+## Tech Stack
 
 - Next.js 16 App Router
 - React 19
 - TypeScript
 - Tailwind CSS 4
-- shadcn/ui
+- Radix-based UI primitives
 - TanStack Query
-- Axios
+- axios
 - `@dnd-kit/core`
 - Sonner
-- Vitest and Testing Library
+- Vitest + Testing Library
 
-## Local Defaults
+## Environment Variables
 
-The checked-in `.env.example` uses these local defaults:
+The checked-in `frontend/.env.example` contains:
 
-- app URL: `http://localhost:3000`
-- backend API URL: `http://localhost:4000/api/v1`
+```env
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+NEXT_PUBLIC_API_URL=http://localhost:4000/api/v1
+```
 
-Environment variables:
+Variable purposes:
 
-- `NEXT_PUBLIC_APP_URL`
-- `NEXT_PUBLIC_API_URL`
+- `NEXT_PUBLIC_APP_URL` — the frontend origin used for metadata and route-level app URLs
+- `NEXT_PUBLIC_API_URL` — backend API base URL, including `/api/v1`
+
+Important:
+
+- `NEXT_PUBLIC_APP_URL` should be an origin only
+- `NEXT_PUBLIC_API_URL` should include the API prefix
 
 ## Run Locally
 
-From `frontend/`:
-
-1. Copy the env file:
-
-```bash
-cp .env.example .env.local
-```
-
-2. Install dependencies:
+From the monorepo root:
 
 ```bash
 pnpm install
 ```
 
-3. Make sure the backend is running at `http://localhost:4000`
-   or update `NEXT_PUBLIC_API_URL` to match your backend.
-
-4. Start the frontend:
+Then from `frontend/`:
 
 ```bash
+cp .env.example .env
 pnpm dev
 ```
 
-5. Open `http://localhost:3000`
+You also need the backend running at the URL configured in `NEXT_PUBLIC_API_URL`.
 
-For the full reviewer flow, sign in at `http://localhost:3000/login` after the
-backend seed flow has been run.
+Default local URLs:
+
+- frontend: `http://localhost:3000`
+- backend API: `http://localhost:4000/api/v1`
+
+For the full local reviewer flow, also start the backend, apply migrations, and optionally seed demo data. See:
+
+- [../docs/local-development.md](../docs/local-development.md)
 
 ## Scripts
+
+From `frontend/`:
 
 ```bash
 pnpm dev
@@ -91,6 +177,8 @@ pnpm typecheck
 
 ## Verification
 
+Recommended verification before committing frontend changes:
+
 ```bash
 pnpm lint
 pnpm test
@@ -98,14 +186,19 @@ pnpm typecheck
 pnpm build
 ```
 
-## Known Issues / Incomplete Functionality
+## Known Issues / Current Limitations
 
-- There is no standalone mocked API mode in this package. The main reviewer
-  flow depends on a running backend and seeded local data.
-- Email verification and invite acceptance screens are implemented in the UI,
-  but end-to-end email-driven testing depends on backend SMTP configuration.
+- This package depends on a running backend; there is no mocked standalone API mode.
+- Google OAuth is intentionally unavailable.
+- Workspace search is currently visual-only.
+- `/verify-email` is a redirect path on `main`, not an active verification UI.
+- Task attachments are URL-backed references, not uploaded files.
+- Invite acceptance and pending invite visibility depend on the current authenticated email matching the invite email.
 
-## Related Notes
+## Related Documentation
 
-- [src/README.md](./src/README.md)
 - [../README.md](../README.md)
+- [../docs/architecture-overview.md](../docs/architecture-overview.md)
+- [../docs/project-workflows.md](../docs/project-workflows.md)
+- [../docs/roles-and-permissions.md](../docs/roles-and-permissions.md)
+- [src/README.md](./src/README.md)
