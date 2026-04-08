@@ -38,7 +38,7 @@ export function ProjectBoardShell({ projectId }: ProjectBoardShellProps) {
   }
 
   return (
-    <section className="space-y-4">
+    <section className="min-w-0 space-y-4">
       <ProjectBoardHeaderCard
         canEditProject={board.canEditProject}
         canInviteMembers={board.canInviteMembers}
@@ -60,9 +60,9 @@ export function ProjectBoardShell({ projectId }: ProjectBoardShellProps) {
         onValueChange={(value) =>
           board.setActiveSurfaceTab(value as "board" | "activity")
         }
-        className="grid gap-2.5"
+        className="grid min-w-0 gap-2.5"
       >
-        <div className="flex items-center justify-between gap-3">
+        <div className="flex min-w-0 flex-wrap items-center justify-between gap-3">
           <TabsList
             aria-label="Project surface view"
             className="min-h-9 border-border/60 bg-background/85 shadow-none"
@@ -77,7 +77,7 @@ export function ProjectBoardShell({ projectId }: ProjectBoardShellProps) {
           </p>
         </div>
 
-        <TabsContent value="board">
+        <TabsContent value="board" className="min-w-0">
           <ProjectBoardBoardTab
             activeDragTask={board.activeDragTask}
             activeLaneStatusId={board.activeLaneStatusId}
@@ -114,7 +114,7 @@ export function ProjectBoardShell({ projectId }: ProjectBoardShellProps) {
           />
         </TabsContent>
 
-        <TabsContent value="activity">
+        <TabsContent value="activity" className="min-w-0">
           <ProjectActivityFeedCard
             projectId={board.projectId}
             eventType={board.activityEventType}

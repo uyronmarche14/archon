@@ -1470,6 +1470,13 @@ describe("ProjectBoardShell", () => {
       await screen.findByRole("heading", { name: "Stage 7" }),
     ).toBeInTheDocument();
     expect(screen.getByTestId("board-lanes-scroll-area")).toBeInTheDocument();
+    expect(screen.getByTestId("board-lanes-scroll-area")).toHaveClass(
+      "w-full",
+      "max-w-full",
+    );
+    expect(screen.getByRole("region", { name: "Task board" })).toHaveClass(
+      "min-w-0",
+    );
     expect(getDesktopLaneTitles()).toEqual([
       "Stage 1",
       "Stage 2",

@@ -23,6 +23,7 @@ export function BoardContainer({
   return (
     <section
       className={cn(
+        "min-w-0",
         tone === "workspace"
           ? "rounded-[1.25rem] border border-border/80 bg-[linear-gradient(180deg,color-mix(in_oklab,var(--primary)_3%,white)_0%,color-mix(in_oklab,var(--background)_96%,white)_42%,color-mix(in_oklab,var(--surface-subtle)_95%,white)_100%)] shadow-[0_1px_2px_rgba(15,23,42,0.05),0_24px_52px_-38px_rgba(15,23,42,0.5)]"
           : "rounded-[1.2rem] border border-border/70 bg-linear-to-b from-background via-background to-surface-subtle/45 shadow-[0_1px_2px_rgba(15,23,42,0.04)]",
@@ -31,12 +32,15 @@ export function BoardContainer({
       aria-label="Task board"
     >
       {isDesktop ? (
-        <ScrollArea className="w-full" data-testid="board-lanes-scroll-area">
+        <ScrollArea
+          className="w-full max-w-full"
+          data-testid="board-lanes-scroll-area"
+        >
           <div
             className={
               density === "compact"
-                ? "flex min-w-max gap-2.5 pb-1"
-                : "flex min-w-max gap-3 pb-1"
+                ? "flex w-max min-w-full gap-2.5 pb-1"
+                : "flex w-max min-w-full gap-3 pb-1"
             }
           >
             {desktopChildren}

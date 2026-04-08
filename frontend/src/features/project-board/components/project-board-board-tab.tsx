@@ -139,61 +139,57 @@ export function ProjectBoardBoardTab({
   );
 
   return (
-    <div className="grid gap-2.5">
-      <div className="grid gap-2 xl:grid-cols-[minmax(0,1fr)_12rem] xl:items-center">
-        <div className="grid gap-2 md:grid-cols-[minmax(0,1fr)_10.5rem_10.5rem]">
-          <div className="rounded-full border border-border/65 bg-background/85 px-1.5 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
-            <div className="relative">
-              <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                aria-label="Search board tasks"
-                className="h-10 border-0 bg-transparent pl-9 shadow-none"
-                placeholder="Search title, summary, acceptance criteria, or notes"
-                value={searchQuery}
-                onChange={(event) => onSearchQueryChange(event.target.value)}
-              />
-            </div>
-          </div>
-
-          <div className="rounded-full border border-border/65 bg-background/85 px-1.5 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
-            <BoardControlSelect
-              aria-label="Filter tasks by assignee"
-              value={selectedAssigneeLabel}
-              menuValue={assigneeFilter}
-              onValueChange={(value) =>
-                onAssigneeFilterChange(value as BoardTaskAssigneeFilter)
-              }
-              options={assigneeOptions}
-            />
-          </div>
-
-          <div className="rounded-full border border-border/65 bg-background/85 px-1.5 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
-            <BoardControlSelect
-              aria-label="Filter tasks by due date"
-              value={selectedDueDateLabel}
-              menuValue={dueDateFilter}
-              onValueChange={(value) =>
-                onDueDateFilterChange(value as BoardTaskDueDateFilter)
-              }
-              options={dueDateOptions}
+    <div className="grid min-w-0 gap-2.5">
+      <div className="flex min-w-0 flex-wrap items-center gap-2">
+        <div className="min-w-0 grow basis-[20rem] rounded-full border border-border/65 bg-background/85 px-1.5 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
+          <div className="relative">
+            <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              aria-label="Search board tasks"
+              className="h-10 border-0 bg-transparent pl-9 shadow-none"
+              placeholder="Search title, summary, acceptance criteria, or notes"
+              value={searchQuery}
+              onChange={(event) => onSearchQueryChange(event.target.value)}
             />
           </div>
         </div>
 
-        <div className="flex items-center gap-2 xl:justify-end">
-          <div className="rounded-full border border-border/65 bg-background/85 px-1.5 shadow-[0_1px_2px_rgba(15,23,42,0.04)] xl:min-w-[12rem]">
-            <BoardControlSelect
-              aria-label="Sort visible task cards"
-              value={selectedSortLabel}
-              menuValue={sortOrder}
-              onValueChange={(value) => onSortOrderChange(value as BoardTaskSort)}
-              options={sortOptions}
-            />
-          </div>
+        <div className="min-w-0 grow basis-[11rem] rounded-full border border-border/65 bg-background/85 px-1.5 shadow-[0_1px_2px_rgba(15,23,42,0.04)] sm:grow-0">
+          <BoardControlSelect
+            aria-label="Filter tasks by assignee"
+            value={selectedAssigneeLabel}
+            menuValue={assigneeFilter}
+            onValueChange={(value) =>
+              onAssigneeFilterChange(value as BoardTaskAssigneeFilter)
+            }
+            options={assigneeOptions}
+          />
+        </div>
+
+        <div className="min-w-0 grow basis-[11rem] rounded-full border border-border/65 bg-background/85 px-1.5 shadow-[0_1px_2px_rgba(15,23,42,0.04)] sm:grow-0">
+          <BoardControlSelect
+            aria-label="Filter tasks by due date"
+            value={selectedDueDateLabel}
+            menuValue={dueDateFilter}
+            onValueChange={(value) =>
+              onDueDateFilterChange(value as BoardTaskDueDateFilter)
+            }
+            options={dueDateOptions}
+          />
+        </div>
+
+        <div className="min-w-0 grow basis-[12rem] rounded-full border border-border/65 bg-background/85 px-1.5 shadow-[0_1px_2px_rgba(15,23,42,0.04)] sm:ml-auto sm:grow-0">
+          <BoardControlSelect
+            aria-label="Sort visible task cards"
+            value={selectedSortLabel}
+            menuValue={sortOrder}
+            onValueChange={(value) => onSortOrderChange(value as BoardTaskSort)}
+            options={sortOptions}
+          />
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-1.5">
+      <div className="flex min-w-0 flex-wrap items-center gap-1.5">
         {boardFilters.map((filter) => (
           <button
             key={filter.label}
@@ -281,7 +277,7 @@ function BoardControlSelect({
         <button
           type="button"
           aria-label={ariaLabel}
-          className="inline-flex h-10 w-full items-center justify-between gap-3 rounded-full px-3 text-sm text-foreground outline-none transition-colors hover:bg-muted/35 focus-visible:ring-2 focus-visible:ring-ring/40"
+          className="inline-flex h-10 w-full min-w-0 items-center justify-between gap-3 rounded-full px-3 text-sm text-foreground outline-none transition-colors hover:bg-muted/35 focus-visible:ring-2 focus-visible:ring-ring/40"
         >
           <span className="truncate">{value}</span>
           <ChevronDown className="size-4 shrink-0 text-muted-foreground" />
