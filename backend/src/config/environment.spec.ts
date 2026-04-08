@@ -79,6 +79,7 @@ describe('environment configuration', () => {
       JWT_REFRESH_SECRET: 'production-refresh-secret-123',
       EMAIL_VERIFICATION_MODE: 'bypass',
       INVITE_DELIVERY_MODE: 'link',
+      ALLOW_INTERNAL_PASSWORD_RESET_IN_PRODUCTION: true,
       NODE_ENV: 'production',
     });
 
@@ -86,10 +87,12 @@ describe('environment configuration', () => {
       result.value as {
         EMAIL_VERIFICATION_MODE: string;
         INVITE_DELIVERY_MODE: string;
+        ALLOW_INTERNAL_PASSWORD_RESET_IN_PRODUCTION: boolean;
       },
     ).toMatchObject({
       EMAIL_VERIFICATION_MODE: 'bypass',
       INVITE_DELIVERY_MODE: 'link',
+      ALLOW_INTERNAL_PASSWORD_RESET_IN_PRODUCTION: true,
     });
   });
 
@@ -367,6 +370,7 @@ describe('environment configuration', () => {
         const config: Record<string, string | boolean | undefined> = {
           EMAIL_VERIFICATION_MODE: 'bypass',
           INVITE_DELIVERY_MODE: 'link',
+          ALLOW_INTERNAL_PASSWORD_RESET_IN_PRODUCTION: true,
           REFRESH_COOKIE_SECURE: undefined,
           TRUST_PROXY_HOPS: undefined,
         };
@@ -379,6 +383,9 @@ describe('environment configuration', () => {
       'bypass',
     );
     expect(getAppRuntimeConfig(configService).inviteDeliveryMode).toBe('link');
+    expect(
+      getAppRuntimeConfig(configService).allowInternalPasswordResetInProduction,
+    ).toBe(true);
   });
 
   it('uses MAIL_FROM ahead of SMTP_FROM when present', () => {

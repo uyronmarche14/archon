@@ -63,7 +63,7 @@ export function ForgotPasswordPanel() {
     <PublicAuthCard
       eyebrow="Recovery"
       title="Reset your password"
-      description="Enter your email to generate an internal testing reset link on this no-email build."
+      description="Enter your email to generate a one-time reset link for this no-email build."
       footerHref="/login"
       footerLabel="Remembered your password?"
       footerText="Back to login"
@@ -89,8 +89,10 @@ export function ForgotPasswordPanel() {
         </label>
 
         <div className="rounded-[8px] bg-muted/45 px-4 py-3 text-xs leading-6 text-muted-foreground">
-          This route is internal-only on the current branch. In development and test environments,
-          Archon reveals a one-time reset link directly instead of sending email.
+          This branch uses direct reset links instead of email. Local development always exposes
+          them, and hosted demo deployments can opt in with
+          {" "}
+          <code>ALLOW_INTERNAL_PASSWORD_RESET_IN_PRODUCTION=true</code>.
         </div>
 
         {formError ? (

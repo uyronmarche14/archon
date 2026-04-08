@@ -12,6 +12,25 @@ Archon is organized around three core ideas:
 - projects are the main collaboration boundary
 - tasks move through project-defined workflow statuses on a Kanban-style board
 
+```mermaid
+flowchart LR
+  visitor["Visitors and signed-in users"]
+  public["Public routes<br/>/, /login, /signup, /invite/[token]"]
+  workspace["Protected workspace<br/>/app, /app/projects/[projectId]"]
+  frontend["Next.js frontend"]
+  api["NestJS API<br/>/api/v1"]
+  db["Prisma + MySQL/MariaDB"]
+  mail["Dormant mail + verify-email support<br/>(non-default on main)"]
+
+  visitor --> public
+  visitor --> workspace
+  public --> frontend
+  workspace --> frontend
+  frontend --> api
+  api --> db
+  api -. optional .-> mail
+```
+
 The product has two major surfaces:
 
 - public routes for landing, login, signup, and invite review
@@ -220,6 +239,8 @@ dowinn/
 - `src/features/tasks` — task drawer, comments, attachments, logs, assignment notifications
 - `src/components/shared` — workspace shell, account menu, navigation chrome
 - `src/services/http` — axios client, auth refresh wiring, API base URL logic
+
+For a fuller visual walkthrough, see [docs/architecture-overview.md](docs/architecture-overview.md).
 
 ## Tech Stack
 

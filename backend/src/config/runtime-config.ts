@@ -15,6 +15,7 @@ export type AppRuntimeConfig = {
   trustProxyHops: number;
   emailVerificationMode: EmailVerificationMode;
   inviteDeliveryMode: InviteDeliveryMode;
+  allowInternalPasswordResetInProduction: boolean;
   nodeEnv: 'development' | 'test' | 'production';
 };
 
@@ -66,6 +67,10 @@ export function getAppRuntimeConfig(
       'bypass',
     inviteDeliveryMode:
       configService.get<InviteDeliveryMode>('INVITE_DELIVERY_MODE') ?? 'link',
+    allowInternalPasswordResetInProduction:
+      configService.get<boolean>(
+        'ALLOW_INTERNAL_PASSWORD_RESET_IN_PRODUCTION',
+      ) ?? false,
   };
 }
 
@@ -79,6 +84,7 @@ export function getAuthRuntimeConfig(configService: ConfigService) {
     refreshCookieSecure,
     emailVerificationMode,
     frontendUrl,
+    allowInternalPasswordResetInProduction,
     nodeEnv,
   } = getAppRuntimeConfig(configService);
 
@@ -91,6 +97,7 @@ export function getAuthRuntimeConfig(configService: ConfigService) {
     refreshCookieSecure,
     emailVerificationMode,
     frontendUrl,
+    allowInternalPasswordResetInProduction,
     nodeEnv,
   };
 }

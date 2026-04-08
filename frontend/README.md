@@ -10,6 +10,7 @@ This README documents the current `main` branch behavior. On this branch, the fr
 - matching authenticated users also see pending invites inside the app
 
 For the repo-wide overview, see [../README.md](../README.md).
+For the visual architecture and flow diagrams, see [../README.md](../README.md) and [../docs/architecture-overview.md](../docs/architecture-overview.md).
 
 ## Overview
 

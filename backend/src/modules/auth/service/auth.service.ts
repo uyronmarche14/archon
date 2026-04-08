@@ -299,8 +299,7 @@ export class AuthService {
   ): Promise<ForgotPasswordResult> {
     if (!this.isInternalPasswordResetEnabled()) {
       throw createForbiddenException({
-        message:
-          'Password reset is unavailable on this deployment without email delivery.',
+        message: 'Password reset demo links are disabled on this deployment.',
       });
     }
 
@@ -836,7 +835,12 @@ export class AuthService {
   }
 
   private isInternalPasswordResetEnabled() {
-    return getAuthRuntimeConfig(this.configService).nodeEnv !== 'production';
+    const authConfig = getAuthRuntimeConfig(this.configService);
+
+    return (
+      authConfig.nodeEnv !== 'production' ||
+      authConfig.allowInternalPasswordResetInProduction
+    );
   }
 
   private createUnauthenticatedException(message: string) {

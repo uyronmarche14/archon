@@ -542,7 +542,7 @@ describe('AuthService', () => {
     expect(result.resetUrl).toContain('email=jane%40example.com');
   });
 
-  it('rejects forgot password in production when email delivery is unavailable', async () => {
+  it('rejects forgot password in production when internal demo reset links are disabled', async () => {
     const authService = createAuthService();
     optionalConfigValues.NODE_ENV = 'production';
 
@@ -553,12 +553,38 @@ describe('AuthService', () => {
     ).rejects.toMatchObject({
       response: {
         code: 'FORBIDDEN',
-        message:
-          'Password reset is unavailable on this deployment without email delivery.',
+        message: 'Password reset demo links are disabled on this deployment.',
       },
     });
 
     expect(mockPrismaService.passwordResetToken.create).not.toHaveBeenCalled();
+  });
+
+  it('allows forgot password in production when internal demo reset links are explicitly enabled', async () => {
+    const authService = createAuthService();
+    optionalConfigValues.NODE_ENV = 'production';
+    optionalConfigValues.ALLOW_INTERNAL_PASSWORD_RESET_IN_PRODUCTION = true;
+
+    const result = await authService.forgotPassword({
+      email: 'jane@example.com',
+    });
+
+    expect(mockPrismaService.passwordResetToken.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        userId: 'user-1',
+        tokenHash: expect.any(String),
+        expiresAt: expect.any(Date),
+      }),
+    });
+    expect(result).toEqual({
+      message:
+        'Password reset link generated for internal testing. Use it to continue the reset flow.',
+      resetAvailable: true,
+      resetToken: expect.any(String),
+      resetUrl: expect.stringContaining(
+        'http://localhost:3000/reset-password?token=',
+      ),
+    });
   });
 
   it('resets the password, consumes reset tokens, and revokes refresh tokens', async () => {

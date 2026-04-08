@@ -10,6 +10,7 @@ This README describes the current `main` branch implementation. On this branch, 
 Mail delivery and verify-email routes still exist, but they are dormant/hidden from the default product flow.
 
 For the repo-wide overview, see [../README.md](../README.md).
+For the visual architecture and flow diagrams, see [../README.md](../README.md) and [../docs/architecture-overview.md](../docs/architecture-overview.md).
 
 ## Overview
 

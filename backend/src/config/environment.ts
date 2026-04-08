@@ -29,6 +29,7 @@ export const environmentValidationSchema = Joi.object({
     .valid('required', 'bypass')
     .default('bypass'),
   INVITE_DELIVERY_MODE: Joi.string().valid('email', 'link').default('link'),
+  ALLOW_INTERNAL_PASSWORD_RESET_IN_PRODUCTION: Joi.boolean().default(false),
   MAIL_PROVIDER: Joi.string().valid('smtp', 'resend').default('smtp'),
   MAIL_FROM: Joi.string().trim().min(3).optional(),
   RESEND_API_KEY: Joi.string().trim().optional(),

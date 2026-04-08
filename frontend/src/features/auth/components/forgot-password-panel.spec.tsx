@@ -97,8 +97,7 @@ describe("ForgotPasswordPanel", () => {
       isPending: false,
       mutateAsync: vi.fn().mockRejectedValue(
         new ApiClientError({
-          message:
-            "Password reset is unavailable on this deployment without email delivery.",
+          message: "Password reset demo links are disabled on this deployment.",
           code: "FORBIDDEN",
           status: 403,
         }),
@@ -113,7 +112,7 @@ describe("ForgotPasswordPanel", () => {
 
     expect(
       await screen.findByText(
-        /password reset is unavailable on this deployment without email delivery/i,
+        /password reset demo links are disabled on this deployment/i,
       ),
     ).toBeInTheDocument();
     expect(showApiErrorToastMock).toHaveBeenCalled();
