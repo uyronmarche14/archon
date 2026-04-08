@@ -10,6 +10,7 @@ import {
   createForbiddenException,
   createNotFoundException,
   createUnauthenticatedException,
+  createValidationException,
 } from '../../../common/utils/api-exception.util';
 import {
   generateOpaqueToken,
@@ -19,17 +20,23 @@ import { getAuthRuntimeConfig } from '../../../config/runtime-config';
 import { PrismaService } from '../../../database/prisma.service';
 import { MailService } from '../../mail/service/mail.service';
 import { buildVerificationEmailTemplate } from '../../mail/templates/verification-email.template';
+import type { ChangePasswordDto } from '../dto/change-password.dto';
+import type { ForgotPasswordDto } from '../dto/forgot-password.dto';
 import type { LoginDto } from '../dto/login.dto';
+import type { ResetPasswordDto } from '../dto/reset-password.dto';
 import type { ResendVerificationDto } from '../dto/resend-verification.dto';
 import type { SignupDto } from '../dto/signup.dto';
 import type { VerifyEmailConfirmDto } from '../dto/verify-email-confirm.dto';
 import { mapUserToAuthUserResponse } from '../mapper/auth.mapper';
 import type {
   AuthUserResponse,
+  ChangePasswordResult,
   CurrentUserResponse,
+  ForgotPasswordResult,
   LoginResult,
   LogoutResponse,
   RefreshResult,
+  ResetPasswordResult,
   ResendVerificationResult,
   SignupResult,
   VerifyEmailConfirmResult,
@@ -51,6 +58,7 @@ type TokenBundle = {
 };
 
 const EMAIL_VERIFICATION_TTL_MS = 1000 * 60 * 60 * 24;
+const PASSWORD_RESET_TTL_MS = 1000 * 60 * 60;
 
 @Injectable()
 export class AuthService {
@@ -283,6 +291,215 @@ export class AuthService {
 
     return {
       user,
+    };
+  }
+
+  async forgotPassword(
+    forgotPasswordDto: ForgotPasswordDto,
+  ): Promise<ForgotPasswordResult> {
+    if (!this.isInternalPasswordResetEnabled()) {
+      throw createForbiddenException({
+        message:
+          'Password reset is unavailable on this deployment without email delivery.',
+      });
+    }
+
+    const user = await this.prismaService.user.findUnique({
+      where: {
+        email: forgotPasswordDto.email,
+      },
+    });
+
+    if (!user) {
+      return {
+        message:
+          'If the account exists, an internal testing reset link is now available.',
+        resetAvailable: false,
+        resetToken: null,
+        resetUrl: null,
+      };
+    }
+
+    const rawToken = generateOpaqueToken();
+    const tokenHash = hashOpaqueToken(rawToken);
+    const resetUrl = this.buildPasswordResetLink(rawToken, user.email);
+
+    await this.prismaService.$transaction([
+      this.prismaService.passwordResetToken.deleteMany({
+        where: {
+          userId: user.id,
+          consumedAt: null,
+        },
+      }),
+      this.prismaService.passwordResetToken.create({
+        data: {
+          userId: user.id,
+          tokenHash,
+          expiresAt: new Date(Date.now() + PASSWORD_RESET_TTL_MS),
+        },
+      }),
+    ]);
+
+    return {
+      message:
+        'Password reset link generated for internal testing. Use it to continue the reset flow.',
+      resetAvailable: true,
+      resetToken: rawToken,
+      resetUrl,
+    };
+  }
+
+  async resetPassword(
+    resetPasswordDto: ResetPasswordDto,
+  ): Promise<ResetPasswordResult> {
+    const now = new Date();
+    const tokenHash = hashOpaqueToken(resetPasswordDto.token);
+    const passwordResetToken =
+      await this.prismaService.passwordResetToken.findUnique({
+        where: {
+          tokenHash,
+        },
+        include: {
+          user: true,
+        },
+      });
+
+    if (
+      !passwordResetToken ||
+      passwordResetToken.consumedAt ||
+      passwordResetToken.expiresAt <= now
+    ) {
+      throw createNotFoundException({
+        message: 'Password reset token is invalid or expired',
+      });
+    }
+
+    const nextPasswordHash = await bcrypt.hash(resetPasswordDto.password, 12);
+
+    await this.prismaService.$transaction([
+      this.prismaService.user.update({
+        where: {
+          id: passwordResetToken.userId,
+        },
+        data: {
+          passwordHash: nextPasswordHash,
+        },
+      }),
+      this.prismaService.passwordResetToken.update({
+        where: {
+          id: passwordResetToken.id,
+        },
+        data: {
+          consumedAt: now,
+        },
+      }),
+      this.prismaService.passwordResetToken.updateMany({
+        where: {
+          userId: passwordResetToken.userId,
+          consumedAt: null,
+          id: {
+            not: passwordResetToken.id,
+          },
+        },
+        data: {
+          consumedAt: now,
+        },
+      }),
+      this.prismaService.refreshToken.updateMany({
+        where: {
+          userId: passwordResetToken.userId,
+          revokedAt: null,
+        },
+        data: {
+          revokedAt: now,
+        },
+      }),
+    ]);
+
+    return {
+      message:
+        'Password reset successfully. Please log in with your new password.',
+      email: passwordResetToken.user.email,
+    };
+  }
+
+  async changePassword(
+    userId: string,
+    changePasswordDto: ChangePasswordDto,
+  ): Promise<ChangePasswordResult> {
+    const user = await this.prismaService.user.findUnique({
+      where: {
+        id: userId,
+      },
+    });
+
+    if (!user) {
+      throw this.createUnauthenticatedException('Authentication is required');
+    }
+
+    const currentPasswordMatches = await bcrypt.compare(
+      changePasswordDto.currentPassword,
+      user.passwordHash,
+    );
+
+    if (!currentPasswordMatches) {
+      throw createForbiddenException({
+        message: 'Current password is incorrect',
+        details: {
+          currentPassword: ['Current password is incorrect.'],
+        },
+      });
+    }
+
+    if (changePasswordDto.currentPassword === changePasswordDto.newPassword) {
+      throw createValidationException({
+        message: 'New password must be different from the current password',
+        details: {
+          newPassword: [
+            'New password must be different from the current password.',
+          ],
+        },
+      });
+    }
+
+    const nextPasswordHash = await bcrypt.hash(
+      changePasswordDto.newPassword,
+      12,
+    );
+    const now = new Date();
+
+    await this.prismaService.$transaction([
+      this.prismaService.user.update({
+        where: {
+          id: user.id,
+        },
+        data: {
+          passwordHash: nextPasswordHash,
+        },
+      }),
+      this.prismaService.refreshToken.updateMany({
+        where: {
+          userId: user.id,
+          revokedAt: null,
+        },
+        data: {
+          revokedAt: now,
+        },
+      }),
+      this.prismaService.passwordResetToken.updateMany({
+        where: {
+          userId: user.id,
+          consumedAt: null,
+        },
+        data: {
+          consumedAt: now,
+        },
+      }),
+    ]);
+
+    return {
+      message: 'Password changed successfully. Please log in again.',
+      email: user.email,
     };
   }
 
@@ -592,6 +809,15 @@ export class AuthService {
     return verificationUrl.toString();
   }
 
+  private buildPasswordResetLink(token: string, email: string) {
+    const authConfig = getAuthRuntimeConfig(this.configService);
+    const resetUrl = new URL('/reset-password', authConfig.frontendUrl);
+    resetUrl.searchParams.set('token', token);
+    resetUrl.searchParams.set('email', email);
+
+    return resetUrl.toString();
+  }
+
   private createInvalidCredentialsException() {
     return this.createUnauthenticatedException('Invalid email or password');
   }
@@ -607,6 +833,10 @@ export class AuthService {
       getAuthRuntimeConfig(this.configService).emailVerificationMode ===
       'required'
     );
+  }
+
+  private isInternalPasswordResetEnabled() {
+    return getAuthRuntimeConfig(this.configService).nodeEnv !== 'production';
   }
 
   private createUnauthenticatedException(message: string) {

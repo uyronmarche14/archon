@@ -42,3 +42,34 @@ export type AuthRefreshResponse = {
 export type LogoutResponse = {
   loggedOut: true;
 };
+
+export type ForgotPasswordRequest = {
+  email: string;
+};
+
+export type ForgotPasswordResponse = {
+  message: string;
+  resetAvailable: boolean;
+  resetToken: string | null;
+  resetUrl: string | null;
+};
+
+export type ResetPasswordRequest = {
+  token: string;
+  password: string;
+};
+
+export type ResetPasswordResponse = {
+  message: string;
+  email: string;
+};
+
+export type ChangePasswordRequest = {
+  currentPassword: string;
+  newPassword: string;
+};
+
+export type ChangePasswordResponse = {
+  message: string;
+  email: string;
+};

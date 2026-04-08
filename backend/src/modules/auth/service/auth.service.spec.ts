@@ -19,6 +19,8 @@ jest.mock('bcrypt', () => ({
 }));
 
 describe('AuthService', () => {
+  const resetTokenForSpec = 'reset-token-for-spec';
+  const nextPasswordForSpec = 'PasswordForSpec1';
   let optionalConfigValues: Record<
     string,
     boolean | number | string | undefined
@@ -64,7 +66,10 @@ describe('AuthService', () => {
         PORT: '4001',
       };
 
-      return config[key];
+      return (
+        (optionalConfigValues[key] as string | boolean | undefined) ??
+        config[key]
+      );
     }),
     get: jest.fn(
       (key: string) =>
@@ -97,12 +102,20 @@ describe('AuthService', () => {
       create: jest.fn(),
       findMany: jest.fn(),
       update: jest.fn(),
+      updateMany: jest.fn(),
     },
     emailVerificationToken: {
       create: jest.fn(),
       deleteMany: jest.fn(),
       findUnique: jest.fn(),
       update: jest.fn(),
+    },
+    passwordResetToken: {
+      create: jest.fn(),
+      deleteMany: jest.fn(),
+      findUnique: jest.fn(),
+      update: jest.fn(),
+      updateMany: jest.fn(),
     },
     $transaction: jest.fn(),
   } as unknown as PrismaService & {
@@ -116,12 +129,20 @@ describe('AuthService', () => {
       create: jest.Mock;
       findMany: jest.Mock;
       update: jest.Mock;
+      updateMany: jest.Mock;
     };
     emailVerificationToken: {
       create: jest.Mock;
       deleteMany: jest.Mock;
       findUnique: jest.Mock;
       update: jest.Mock;
+    };
+    passwordResetToken: {
+      create: jest.Mock;
+      deleteMany: jest.Mock;
+      findUnique: jest.Mock;
+      update: jest.Mock;
+      updateMany: jest.Mock;
     };
     $transaction: jest.Mock;
   };
@@ -149,10 +170,16 @@ describe('AuthService', () => {
     mockPrismaService.refreshToken.create.mockReset();
     mockPrismaService.refreshToken.findMany.mockReset();
     mockPrismaService.refreshToken.update.mockReset();
+    mockPrismaService.refreshToken.updateMany.mockReset();
     mockPrismaService.emailVerificationToken.create.mockReset();
     mockPrismaService.emailVerificationToken.deleteMany.mockReset();
     mockPrismaService.emailVerificationToken.findUnique.mockReset();
     mockPrismaService.emailVerificationToken.update.mockReset();
+    mockPrismaService.passwordResetToken.create.mockReset();
+    mockPrismaService.passwordResetToken.deleteMany.mockReset();
+    mockPrismaService.passwordResetToken.findUnique.mockReset();
+    mockPrismaService.passwordResetToken.update.mockReset();
+    mockPrismaService.passwordResetToken.updateMany.mockReset();
     mockPrismaService.$transaction.mockReset();
 
     bcryptHash.mockResolvedValue('hashed-value');
@@ -169,6 +196,9 @@ describe('AuthService', () => {
       activeRefreshToken,
     ]);
     mockPrismaService.refreshToken.update.mockResolvedValue(undefined);
+    mockPrismaService.refreshToken.updateMany.mockResolvedValue({
+      count: 1,
+    });
     mockPrismaService.emailVerificationToken.create.mockResolvedValue({
       id: 'verification-token-1',
     });
@@ -183,6 +213,27 @@ describe('AuthService', () => {
       userId: 'user-1',
       tokenHash: 'hashed-token',
       redirectPath: '/app/projects/project-1',
+      expiresAt: new Date(Date.now() + 60 * 60 * 1000),
+      consumedAt: null,
+      createdAt: new Date('2026-04-01T00:00:00.000Z'),
+      user: mockUser,
+    });
+    mockPrismaService.passwordResetToken.create.mockResolvedValue({
+      id: 'password-reset-token-1',
+    });
+    mockPrismaService.passwordResetToken.deleteMany.mockResolvedValue({
+      count: 0,
+    });
+    mockPrismaService.passwordResetToken.update.mockResolvedValue({
+      id: 'password-reset-token-1',
+    });
+    mockPrismaService.passwordResetToken.updateMany.mockResolvedValue({
+      count: 0,
+    });
+    mockPrismaService.passwordResetToken.findUnique.mockResolvedValue({
+      id: 'password-reset-token-1',
+      userId: 'user-1',
+      tokenHash: 'hashed-reset-token',
       expiresAt: new Date(Date.now() + 60 * 60 * 1000),
       consumedAt: null,
       createdAt: new Date('2026-04-01T00:00:00.000Z'),
@@ -461,6 +512,143 @@ describe('AuthService', () => {
       accessToken: 'rotated-access-token',
       refreshToken: 'rotated-refresh-token',
       refreshTokenExpiresAt: expect.any(Date),
+    });
+  });
+
+  it('generates an internal password reset link for an existing user in non-production', async () => {
+    const authService = createAuthService();
+
+    const result = await authService.forgotPassword({
+      email: 'jane@example.com',
+    });
+
+    expect(mockPrismaService.passwordResetToken.deleteMany).toHaveBeenCalled();
+    expect(mockPrismaService.passwordResetToken.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        userId: 'user-1',
+        tokenHash: expect.any(String),
+        expiresAt: expect.any(Date),
+      }),
+    });
+    expect(result).toEqual({
+      message:
+        'Password reset link generated for internal testing. Use it to continue the reset flow.',
+      resetAvailable: true,
+      resetToken: expect.any(String),
+      resetUrl: expect.stringContaining(
+        'http://localhost:3000/reset-password?token=',
+      ),
+    });
+    expect(result.resetUrl).toContain('email=jane%40example.com');
+  });
+
+  it('rejects forgot password in production when email delivery is unavailable', async () => {
+    const authService = createAuthService();
+    optionalConfigValues.NODE_ENV = 'production';
+
+    await expect(
+      authService.forgotPassword({
+        email: 'jane@example.com',
+      }),
+    ).rejects.toMatchObject({
+      response: {
+        code: 'FORBIDDEN',
+        message:
+          'Password reset is unavailable on this deployment without email delivery.',
+      },
+    });
+
+    expect(mockPrismaService.passwordResetToken.create).not.toHaveBeenCalled();
+  });
+
+  it('resets the password, consumes reset tokens, and revokes refresh tokens', async () => {
+    const authService = createAuthService();
+
+    const result = await authService.resetPassword({
+      token: resetTokenForSpec,
+      password: nextPasswordForSpec,
+    });
+
+    expect(mockPrismaService.user.update).toHaveBeenCalledWith({
+      where: {
+        id: 'user-1',
+      },
+      data: {
+        passwordHash: 'hashed-value',
+      },
+    });
+    expect(mockPrismaService.passwordResetToken.update).toHaveBeenCalledWith({
+      where: {
+        id: 'password-reset-token-1',
+      },
+      data: {
+        consumedAt: expect.any(Date),
+      },
+    });
+    expect(mockPrismaService.refreshToken.updateMany).toHaveBeenCalledWith({
+      where: {
+        userId: 'user-1',
+        revokedAt: null,
+      },
+      data: {
+        revokedAt: expect.any(Date),
+      },
+    });
+    expect(result).toEqual({
+      message:
+        'Password reset successfully. Please log in with your new password.',
+      email: 'jane@example.com',
+    });
+  });
+
+  it('changes the password when the current password is correct', async () => {
+    const authService = createAuthService();
+
+    const result = await authService.changePassword('user-1', {
+      currentPassword: 'StrongPass1',
+      newPassword: nextPasswordForSpec,
+    });
+
+    expect(mockPrismaService.user.update).toHaveBeenCalledWith({
+      where: {
+        id: 'user-1',
+      },
+      data: {
+        passwordHash: 'hashed-value',
+      },
+    });
+    expect(mockPrismaService.refreshToken.updateMany).toHaveBeenCalledWith({
+      where: {
+        userId: 'user-1',
+        revokedAt: null,
+      },
+      data: {
+        revokedAt: expect.any(Date),
+      },
+    });
+    expect(result).toEqual({
+      message: 'Password changed successfully. Please log in again.',
+      email: 'jane@example.com',
+    });
+  });
+
+  it('rejects change password when the current password is incorrect', async () => {
+    bcryptCompare.mockResolvedValueOnce(false);
+    const authService = createAuthService();
+
+    await expect(
+      authService.changePassword('user-1', {
+        currentPassword: 'WrongPassword1',
+        newPassword: nextPasswordForSpec,
+      }),
+    ).rejects.toMatchObject({
+      response: {
+        code: 'FORBIDDEN',
+        message: 'Current password is incorrect',
+        details: {
+          currentPassword: ['Current password is incorrect.'],
+        },
+      },
     });
   });
 

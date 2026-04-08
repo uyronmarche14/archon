@@ -69,6 +69,56 @@ export class SwaggerRefreshAccessTokenResponseDto {
   accessToken!: string;
 }
 
+export class SwaggerForgotPasswordResponseDto {
+  @ApiProperty({
+    example: 'If the account exists, a reset link has been prepared.',
+  })
+  message!: string;
+
+  @ApiProperty({
+    example: true,
+  })
+  resetAvailable!: boolean;
+
+  @ApiProperty({
+    nullable: true,
+    example:
+      'http://localhost:3000/reset-password?token=abc123&email=jane%40example.com',
+  })
+  resetUrl!: string | null;
+
+  @ApiProperty({
+    nullable: true,
+    example: 'abc123-token',
+  })
+  resetToken!: string | null;
+}
+
+export class SwaggerResetPasswordResponseDto {
+  @ApiProperty({
+    example:
+      'Password reset successfully. Please log in with your new password.',
+  })
+  message!: string;
+
+  @ApiProperty({
+    example: 'jane@example.com',
+  })
+  email!: string;
+}
+
+export class SwaggerChangePasswordResponseDto {
+  @ApiProperty({
+    example: 'Password changed successfully. Please log in again.',
+  })
+  message!: string;
+
+  @ApiProperty({
+    example: 'jane@example.com',
+  })
+  email!: string;
+}
+
 export class SwaggerCurrentUserResponseDto {
   @ApiProperty({
     type: () => SwaggerAuthUserDto,

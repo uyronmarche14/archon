@@ -1,6 +1,7 @@
 "use client";
 
-import { ChevronUp, LogOut, MoreHorizontal, ShieldCheck } from "lucide-react";
+import Link from "next/link";
+import { ChevronUp, KeyRound, LogOut, MoreHorizontal, ShieldCheck } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -99,6 +100,12 @@ export function AccountMenu({
         <DropdownMenuItem disabled>
           <ShieldCheck className="size-4" />
           Current session
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link href="/app/settings/security">
+            <KeyRound className="size-4" />
+            Security
+          </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem

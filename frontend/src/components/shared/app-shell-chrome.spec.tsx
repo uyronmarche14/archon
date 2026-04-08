@@ -44,6 +44,7 @@ vi.mock("lucide-react", () => {
     ChevronUp: Icon,
     FolderKanban: Icon,
     LayoutDashboard: Icon,
+    KeyRound: Icon,
     LogOut: Icon,
     MailPlus: Icon,
     MoreHorizontal: Icon,
@@ -230,6 +231,22 @@ describe("AppShellChrome", () => {
     expect(
       screen.getByRole("link", { name: /open project/i }),
     ).toHaveAttribute("href", "/app/projects/project-3");
+  });
+
+  it("shows the security page link in the account menu", () => {
+    render(
+      <AppShellChrome>
+        <div>Workspace content</div>
+      </AppShellChrome>,
+    );
+
+    fireEvent.click(screen.getAllByRole("button", { name: /open account menu/i })[0]);
+
+    expect(
+      screen
+        .getAllByRole("link", { name: /security/i })
+        .every((link) => link.getAttribute("href") === "/app/settings/security"),
+    ).toBe(true);
   });
 
   it("opens the project finder from the header button and navigates to a project", () => {
