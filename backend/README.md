@@ -272,7 +272,7 @@ pnpm prisma:generate
 
 ## Known Issues / Current Limitations
 
-- The root workspace still advertises `db:*` helper scripts that reference a missing `scripts/docker-compose.sh`; use the compose command above instead.
+- The root workspace `db:*` helper scripts target the same compose stack documented above and assume `infra/.env` has been created.
 - Swagger is opt-in and will return a normal 404 envelope when `SWAGGER_ENABLED` is false.
 - The backend still contains dormant mail and verification infrastructure even though `main` defaults to no-email auth and link-based invites.
 - On platforms that block SMTP, email delivery should be considered optional or re-enabled carefully with an HTTPS-based provider.

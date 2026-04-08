@@ -53,6 +53,7 @@ The frontend redirects anonymous users to `/login?next=...`.
 - bootstrap session state from `/auth/me` and `/auth/refresh`
 - manage the in-memory access token lifecycle
 - load projects, project detail, grouped tasks, activity, invites, and notifications from the backend
+- provide a workspace-level project finder in the shell header
 - provide dashboard and board interactions
 - handle project creation/edit/delete flows
 - handle task create/update/move/comment/attachment flows
@@ -190,7 +191,7 @@ pnpm build
 
 - This package depends on a running backend; there is no mocked standalone API mode.
 - Google OAuth is intentionally unavailable.
-- Workspace search is currently visual-only.
+- Workspace header search is limited to visible project names and descriptions; it does not search tasks or activity.
 - `/verify-email` is a redirect path on `main`, not an active verification UI.
 - Task attachments are URL-backed references, not uploaded files.
 - Invite acceptance and pending invite visibility depend on the current authenticated email matching the invite email.

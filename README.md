@@ -103,7 +103,7 @@ Practical behavior:
 ## Key Features
 
 - Account signup, login, logout, refresh-token session rotation, and `/auth/me`
-- Protected workspace shell with sidebar navigation and notification bell
+- Protected workspace shell with sidebar navigation, project finder, and notification bell
 - Project dashboard with visible-project metrics and pending invites
 - Project creation, editing, and deletion
 - Owner-managed project status creation, editing, reordering, and deletion
@@ -368,11 +368,11 @@ Swagger is mounted at `/api/v1/docs` only when `SWAGGER_ENABLED=true`.
 Implementation-backed limitations are documented in [docs/known-issues.md](docs/known-issues.md). Important examples:
 
 - Google OAuth is not implemented; the UI explicitly marks it unavailable
-- workspace search is visual-only and does not execute real queries
+- workspace header search finds visible projects by name or description, but it does not search tasks or activity
 - attachments are URL-backed references, not uploaded files
 - `/verify-email` no longer runs a frontend verification workflow on `main`
 - backend email verification and mail delivery support still exist but are dormant by default on `main`
-- the root `db:*` scripts reference a missing `scripts/docker-compose.sh`; use the compose commands documented in `docs/local-development.md` instead
+- the root `db:*` scripts manage the documented local compose stack for MySQL
 
 ## Developer Notes
 
@@ -393,7 +393,7 @@ Implementation-backed limitations are documented in [docs/known-issues.md](docs/
 
 ## Future Improvements
 
-- Implement real workspace search or remove the visual placeholder
+- Expand workspace search beyond the current project finder to include tasks and activity
 - Add first-class file uploads instead of URL-only task attachments
 - Decide whether dormant email verification should remain supported on `main`
 - Add richer operational documentation for deployment targets and environment-specific hosting

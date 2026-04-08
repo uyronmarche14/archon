@@ -276,6 +276,17 @@ pnpm --filter backend prisma:generate
 
 The backend also runs `prisma generate` during `build` and `postinstall`.
 
-### Root DB helper scripts do not work
+### Root DB helper scripts
 
-The root `package.json` still references a missing `scripts/docker-compose.sh`. Use the explicit `docker compose --env-file infra/.env -f infra/docker/docker-compose.yml ...` commands above instead.
+The root workspace now exposes working DB shortcuts:
+
+```bash
+pnpm db:up
+pnpm db:down
+pnpm db:logs
+```
+
+These scripts call the same compose stack documented above:
+
+- `infra/.env`
+- `infra/docker/docker-compose.yml`

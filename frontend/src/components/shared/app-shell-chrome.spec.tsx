@@ -5,6 +5,7 @@ import { AppShellChrome } from "@/components/shared/app-shell-chrome";
 
 const navigationState = vi.hoisted(() => ({
   pathname: "/app",
+  push: vi.fn(),
   replace: vi.fn(),
 }));
 
@@ -53,6 +54,7 @@ vi.mock("lucide-react", () => {
     Search: Icon,
     ShieldCheck: Icon,
     UserRoundPlus: Icon,
+    X: Icon,
   };
 });
 
@@ -104,6 +106,7 @@ vi.mock("@/lib/toast", () => ({
 describe("AppShellChrome", () => {
   beforeEach(() => {
     navigationState.pathname = "/app";
+    navigationState.push.mockReset();
     navigationState.replace.mockReset();
     logoutState.mutateAsync.mockReset();
     authState.clearSession.mockReset();
@@ -227,6 +230,43 @@ describe("AppShellChrome", () => {
     expect(
       screen.getByRole("link", { name: /open project/i }),
     ).toHaveAttribute("href", "/app/projects/project-3");
+  });
+
+  it("opens the project finder from the header button and navigates to a project", () => {
+    render(
+      <AppShellChrome>
+        <div>Workspace content</div>
+      </AppShellChrome>,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /search projects/i }));
+
+    expect(
+      screen.getByRole("heading", { name: /search projects/i }),
+    ).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText(/project finder/i), {
+      target: { value: "launch" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /launch planning owner/i }));
+
+    expect(navigationState.push).toHaveBeenCalledWith(
+      "/app/projects/launch-planning",
+    );
+  });
+
+  it("opens the project finder when Ctrl+K is pressed", () => {
+    render(
+      <AppShellChrome>
+        <div>Workspace content</div>
+      </AppShellChrome>,
+    );
+
+    fireEvent.keyDown(window, { key: "k", ctrlKey: true });
+
+    expect(
+      screen.getByRole("heading", { name: /search projects/i }),
+    ).toBeInTheDocument();
   });
 });
 

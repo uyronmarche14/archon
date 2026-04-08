@@ -38,6 +38,7 @@ import {
 import { WorkspaceNotificationsList } from "@/features/notifications/components/workspace-notifications-list";
 import { useWorkspaceNotifications } from "@/features/notifications/hooks/use-workspace-notifications";
 import { CreateProjectDialog } from "@/features/projects/components/create-project-dialog";
+import { ProjectSearchDialog } from "@/features/projects/components/project-search-dialog";
 import { ProjectsSidebarNavigation } from "@/features/projects/components/projects-sidebar-navigation";
 import { useActiveWorkspaceLabel } from "@/features/projects/hooks/use-active-workspace-label";
 import { showApiErrorToast, showSuccessToast } from "@/lib/toast";
@@ -65,6 +66,7 @@ function AppShellChromeLayout({ children }: AppShellChromeProps) {
   const activeLabel = useActiveWorkspaceLabel(pathname);
   const notificationsQuery = useWorkspaceNotifications();
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [projectSearchOpen, setProjectSearchOpen] = useState(false);
   const sessionName = session?.user.name ?? "Workspace visitor";
   const sessionEmail = session?.user.email ?? "Authentication required";
   const sessionInitials = getInitials(sessionName);
@@ -75,6 +77,28 @@ function AppShellChromeLayout({ children }: AppShellChromeProps) {
 
     return () => {
       delete document.body.dataset.workspaceTheme;
+    };
+  }, []);
+
+  useEffect(() => {
+    function handleProjectSearchShortcut(event: KeyboardEvent) {
+      const isSearchShortcut =
+        (event.metaKey || event.ctrlKey) &&
+        !event.altKey &&
+        event.key.toLowerCase() === "k";
+
+      if (!isSearchShortcut) {
+        return;
+      }
+
+      event.preventDefault();
+      setProjectSearchOpen(true);
+    }
+
+    window.addEventListener("keydown", handleProjectSearchShortcut);
+
+    return () => {
+      window.removeEventListener("keydown", handleProjectSearchShortcut);
     };
   }, []);
 
@@ -98,6 +122,11 @@ function AppShellChromeLayout({ children }: AppShellChromeProps) {
       data-workspace-theme="vivid"
       className="workspace-theme relative flex min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top_left,color-mix(in_oklab,var(--primary)_11%,transparent),transparent_32%),linear-gradient(180deg,color-mix(in_oklab,var(--primary)_3%,var(--shell-inset))_0%,var(--background)_58%,color-mix(in_oklab,var(--primary)_2%,var(--background))_100%)]"
     >
+      <ProjectSearchDialog
+        open={projectSearchOpen}
+        onOpenChange={setProjectSearchOpen}
+      />
+
       <Sidebar>
         <SidebarHeader className="space-y-4">
           <div className="flex items-center group-data-[state=collapsed]/sidebar:justify-center">
@@ -194,6 +223,7 @@ function AppShellChromeLayout({ children }: AppShellChromeProps) {
                       variant="outline"
                       size="sm"
                       className="min-w-[16rem] justify-between rounded-[1rem] border-border/85 bg-[linear-gradient(145deg,color-mix(in_oklab,var(--primary)_4%,white),color-mix(in_oklab,var(--background)_92%,white))] text-muted-foreground shadow-[0_16px_30px_-26px_rgba(15,23,42,0.45)] xl:min-w-[20rem]"
+                      onClick={() => setProjectSearchOpen(true)}
                     >
                       <span className="flex items-center gap-2 text-[13px]">
                         <Search className="size-4" />
@@ -204,7 +234,9 @@ function AppShellChromeLayout({ children }: AppShellChromeProps) {
                       </span>
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent>Search is visual-only in this pass.</TooltipContent>
+                  <TooltipContent>
+                    Search visible projects and jump straight into a board.
+                  </TooltipContent>
                 </Tooltip>
               </div>
 
@@ -233,11 +265,12 @@ function AppShellChromeLayout({ children }: AppShellChromeProps) {
                     size="icon"
                     className="size-9 rounded-[0.95rem] border-border/85 bg-[linear-gradient(145deg,color-mix(in_oklab,var(--primary)_4%,white),color-mix(in_oklab,var(--background)_92%,white))] text-muted-foreground shadow-[0_16px_30px_-26px_rgba(15,23,42,0.45)] md:hidden"
                     aria-label="Search workspace"
+                    onClick={() => setProjectSearchOpen(true)}
                   >
                     <Search className="size-[1.1rem]" />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent>Search is visual-only in this pass.</TooltipContent>
+                <TooltipContent>Search visible projects.</TooltipContent>
               </Tooltip>
 
               <DropdownMenu open={notificationsOpen} onOpenChange={setNotificationsOpen}>
