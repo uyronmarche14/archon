@@ -1,10 +1,13 @@
 import type {
   AuthUserResponse,
   AuthSessionResponse,
+  ChangePasswordResponse,
   CurrentUserResponse,
+  ForgotPasswordResponse,
   LoginResponse,
   LogoutResponse,
   RefreshAccessTokenResponse,
+  ResetPasswordResponse,
   ResendVerificationResponse,
   SignupResponse,
   VerifyEmailConfirmResponse,
@@ -47,6 +50,35 @@ export function mapRefreshResponse(
 ): RefreshAccessTokenResponse {
   return {
     accessToken,
+  };
+}
+
+export function mapForgotPasswordResponse(
+  input: ForgotPasswordResponse,
+): ForgotPasswordResponse {
+  return {
+    message: input.message,
+    resetAvailable: input.resetAvailable,
+    resetToken: input.resetToken,
+    resetUrl: input.resetUrl,
+  };
+}
+
+export function mapResetPasswordResponse(
+  input: ResetPasswordResponse,
+): ResetPasswordResponse {
+  return {
+    message: input.message,
+    email: input.email,
+  };
+}
+
+export function mapChangePasswordResponse(
+  input: ChangePasswordResponse,
+): ChangePasswordResponse {
+  return {
+    message: input.message,
+    email: input.email,
   };
 }
 

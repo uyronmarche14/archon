@@ -16,6 +16,8 @@ import type { AuthenticatedRequest } from '../types/authenticated-request.type';
 describe('AuthController', () => {
   let authController: AuthController;
   let authService: jest.Mocked<AuthService>;
+  const resetTokenForSpec = 'reset-token-for-spec';
+  const nextPasswordForSpec = 'PasswordForSpec1';
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -50,8 +52,24 @@ describe('AuthController', () => {
               refreshToken: 'rotated-refresh-token',
               refreshTokenExpiresAt: new Date('2026-04-10T00:00:00.000Z'),
             }),
+            forgotPassword: jest.fn().mockResolvedValue({
+              message:
+                'Password reset link generated for internal testing. Use it to continue the reset flow.',
+              resetAvailable: true,
+              resetToken: resetTokenForSpec,
+              resetUrl: `http://localhost:3000/reset-password?token=${resetTokenForSpec}&email=jane%40example.com`,
+            }),
+            resetPassword: jest.fn().mockResolvedValue({
+              message:
+                'Password reset successfully. Please log in with your new password.',
+              email: 'jane@example.com',
+            }),
             logout: jest.fn().mockResolvedValue({
               loggedOut: true,
+            }),
+            changePassword: jest.fn().mockResolvedValue({
+              message: 'Password changed successfully. Please log in again.',
+              email: 'jane@example.com',
             }),
             authenticateAccessToken: jest.fn(),
           },
@@ -202,6 +220,40 @@ describe('AuthController', () => {
     );
   });
 
+  it('returns the internal forgot-password reset link payload', async () => {
+    const result = await authController.forgotPassword({
+      email: 'jane@example.com',
+    });
+
+    expect(authService.forgotPassword).toHaveBeenCalledWith({
+      email: 'jane@example.com',
+    });
+    expect(result).toEqual({
+      message:
+        'Password reset link generated for internal testing. Use it to continue the reset flow.',
+      resetAvailable: true,
+      resetToken: resetTokenForSpec,
+      resetUrl: `http://localhost:3000/reset-password?token=${resetTokenForSpec}&email=jane%40example.com`,
+    });
+  });
+
+  it('resets a password from a one-time token payload', async () => {
+    const result = await authController.resetPassword({
+      token: resetTokenForSpec,
+      password: nextPasswordForSpec,
+    });
+
+    expect(authService.resetPassword).toHaveBeenCalledWith({
+      token: resetTokenForSpec,
+      password: nextPasswordForSpec,
+    });
+    expect(result).toEqual({
+      message:
+        'Password reset successfully. Please log in with your new password.',
+      email: 'jane@example.com',
+    });
+  });
+
   it('supports refresh-token recovery after an expired access token is rejected', async () => {
     const jwtAuthGuard = new JwtAuthGuard(authService);
     const protectedRequest = {
@@ -269,6 +321,31 @@ describe('AuthController', () => {
     );
     expect(result).toEqual({
       loggedOut: true,
+    });
+  });
+
+  it('changes the password for the authenticated user', async () => {
+    const result = await authController.changePassword(
+      {
+        id: 'user-1',
+        name: 'Jane Doe',
+        email: 'jane@example.com',
+        role: 'MEMBER',
+        emailVerifiedAt: '2026-04-01T00:00:00.000Z',
+      },
+      {
+        currentPassword: 'StrongPass1',
+        newPassword: nextPasswordForSpec,
+      },
+    );
+
+    expect(authService.changePassword).toHaveBeenCalledWith('user-1', {
+      currentPassword: 'StrongPass1',
+      newPassword: nextPasswordForSpec,
+    });
+    expect(result).toEqual({
+      message: 'Password changed successfully. Please log in again.',
+      email: 'jane@example.com',
     });
   });
 

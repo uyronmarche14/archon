@@ -15,6 +15,10 @@ import { Input } from "@/components/ui/input";
 import { useLogin } from "@/features/auth/hooks/use-login";
 import { useSignup } from "@/features/auth/hooks/use-signup";
 import { useAuthSession } from "@/features/auth/providers/auth-session-provider";
+import {
+  validateEmailAddress,
+  validateStrongPassword,
+} from "@/features/auth/lib/password-validation";
 import type { ApiErrorDetails } from "@/contracts/api";
 import { showApiErrorToast, showInfoToast, showSuccessToast } from "@/lib/toast";
 import { cn } from "@/lib/utils";
@@ -293,12 +297,12 @@ export function AuthPanel({ mode }: AuthPanelProps) {
             </div>
           ) : (
             <div className="flex justify-end">
-              <button
-                type="button"
+              <Link
+                href={`/forgot-password?email=${encodeURIComponent(formValues.email.trim().toLowerCase())}` as Route}
                 className="text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
               >
                 Forgot password?
-              </button>
+              </Link>
             </div>
           )}
 
@@ -361,10 +365,10 @@ function GoogleIcon({ className }: { className?: string }) {
 function validateLoginForm(values: SignupFormValues): SignupFormErrors {
   const errors: SignupFormErrors = {};
 
-  if (!values.email.trim()) {
-    errors.email = "Email is required.";
-  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email)) {
-    errors.email = "Enter a valid email address.";
+  const emailError = validateEmailAddress(values.email);
+
+  if (emailError) {
+    errors.email = emailError;
   }
 
   if (!values.password) {
@@ -381,18 +385,16 @@ function validateSignupForm(values: SignupFormValues): SignupFormErrors {
     errors.name = "Full name is required.";
   }
 
-  if (!values.email.trim()) {
-    errors.email = "Email is required.";
-  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email)) {
-    errors.email = "Enter a valid email address.";
+  const emailError = validateEmailAddress(values.email);
+
+  if (emailError) {
+    errors.email = emailError;
   }
 
-  if (!values.password) {
-    errors.password = "Password is required.";
-  } else if (values.password.length < 8) {
-    errors.password = "Password must be at least 8 characters.";
-  } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(values.password)) {
-    errors.password = "Password must include uppercase, lowercase, and a number.";
+  const passwordError = validateStrongPassword(values.password);
+
+  if (passwordError) {
+    errors.password = passwordError;
   }
 
   return errors;

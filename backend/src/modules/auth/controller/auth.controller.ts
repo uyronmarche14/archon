@@ -24,29 +24,40 @@ import {
 } from '../../../common/swagger/swagger.constants';
 import { AuthRateLimit } from '../decorators/auth-rate-limit.decorator';
 import { CurrentUser } from '../decorators/current-user.decorator';
+import { ChangePasswordDto } from '../dto/change-password.dto';
+import { ForgotPasswordDto } from '../dto/forgot-password.dto';
 import { LoginDto } from '../dto/login.dto';
+import { ResetPasswordDto } from '../dto/reset-password.dto';
+import { ResendVerificationDto } from '../dto/resend-verification.dto';
 import { AuthOriginGuard } from '../guards/auth-origin.guard';
 import { AuthRateLimitGuard } from '../guards/auth-rate-limit.guard';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 import {
+  mapChangePasswordResponse,
   mapCurrentUserResponse,
+  mapForgotPasswordResponse,
   mapLoginResponse,
   mapLogoutResponse,
+  mapResetPasswordResponse,
   mapResendVerificationResponse,
   mapRefreshResponse,
   mapSignupResponse,
   mapVerifyEmailConfirmResponse,
 } from '../mapper/auth.mapper';
 import { SignupDto } from '../dto/signup.dto';
+import { VerifyEmailConfirmDto } from '../dto/verify-email-confirm.dto';
 import { AuthService } from '../service/auth.service';
 import type {
+  AuthUserResponse,
+  ChangePasswordResponse,
   CurrentUserResponse,
+  ForgotPasswordResponse,
   LoginResponse,
   LogoutResponse,
   RefreshAccessTokenResponse,
+  ResetPasswordResponse,
   ResendVerificationResponse,
   SignupResponse,
-  AuthUserResponse,
   VerifyEmailConfirmResponse,
 } from '../types/auth-response.type';
 import { getCookieValue } from '../utils/auth-request.util';
@@ -55,13 +66,14 @@ import {
   getRefreshCookieName,
   setRefreshTokenCookie,
 } from '../utils/refresh-cookie.util';
-import { ResendVerificationDto } from '../dto/resend-verification.dto';
-import { VerifyEmailConfirmDto } from '../dto/verify-email-confirm.dto';
 import {
   SwaggerAuthSessionResponseDto,
+  SwaggerChangePasswordResponseDto,
   SwaggerCurrentUserResponseDto,
+  SwaggerForgotPasswordResponseDto,
   SwaggerLogoutResponseDto,
   SwaggerRefreshAccessTokenResponseDto,
+  SwaggerResetPasswordResponseDto,
   SwaggerResendVerificationResponseDto,
   SwaggerSignupResponseDto,
   SwaggerVerifyEmailConfirmResponseDto,
@@ -173,6 +185,54 @@ export class AuthController {
     return mapRefreshResponse(refreshResult.accessToken);
   }
 
+  @Post('password/forgot')
+  @UseGuards(AuthRateLimitGuard)
+  @AuthRateLimit({
+    key: 'password-forgot',
+    limit: 5,
+    windowMs: 60_000,
+  })
+  @ApiOperation({
+    summary: 'Start the password reset flow for an email address.',
+  })
+  @ApiEnvelopedResponse({
+    status: 201,
+    description: 'Password reset request accepted.',
+    type: SwaggerForgotPasswordResponseDto,
+  })
+  @ApiStandardErrorResponses([400, 403, 429])
+  forgotPassword(
+    @Body() forgotPasswordDto: ForgotPasswordDto,
+  ): Promise<ForgotPasswordResponse> {
+    return this.authService
+      .forgotPassword(forgotPasswordDto)
+      .then(mapForgotPasswordResponse);
+  }
+
+  @Post('password/reset')
+  @UseGuards(AuthRateLimitGuard)
+  @AuthRateLimit({
+    key: 'password-reset',
+    limit: 5,
+    windowMs: 60_000,
+  })
+  @ApiOperation({
+    summary: 'Reset a password using a one-time token.',
+  })
+  @ApiEnvelopedResponse({
+    status: 201,
+    description: 'Password reset completed successfully.',
+    type: SwaggerResetPasswordResponseDto,
+  })
+  @ApiStandardErrorResponses([400, 404, 429])
+  resetPassword(
+    @Body() resetPasswordDto: ResetPasswordDto,
+  ): Promise<ResetPasswordResponse> {
+    return this.authService
+      .resetPassword(resetPasswordDto)
+      .then(mapResetPasswordResponse);
+  }
+
   @Post('logout')
   @UseGuards(AuthOriginGuard)
   @ApiOperation({
@@ -198,6 +258,32 @@ export class AuthController {
     clearRefreshTokenCookie(response, this.configService);
 
     return mapLogoutResponse();
+  }
+
+  @Post('password/change')
+  @UseGuards(JwtAuthGuard, AuthRateLimitGuard)
+  @AuthRateLimit({
+    key: 'password-change',
+    limit: 5,
+    windowMs: 60_000,
+  })
+  @ApiOperation({
+    summary: 'Change the password for the authenticated account.',
+  })
+  @ApiBearerAuth(SWAGGER_BEARER_AUTH_NAME)
+  @ApiEnvelopedResponse({
+    status: 201,
+    description: 'Password changed successfully.',
+    type: SwaggerChangePasswordResponseDto,
+  })
+  @ApiStandardErrorResponses([400, 401, 403, 429])
+  changePassword(
+    @CurrentUser() currentUser: AuthUserResponse,
+    @Body() changePasswordDto: ChangePasswordDto,
+  ): Promise<ChangePasswordResponse> {
+    return this.authService
+      .changePassword(currentUser.id, changePasswordDto)
+      .then(mapChangePasswordResponse);
   }
 
   @Post('verify-email/confirm')

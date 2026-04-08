@@ -25,6 +25,23 @@ export type RefreshAccessTokenResponse = {
   accessToken: string;
 };
 
+export type ForgotPasswordResponse = {
+  message: string;
+  resetAvailable: boolean;
+  resetToken: string | null;
+  resetUrl: string | null;
+};
+
+export type ResetPasswordResponse = {
+  message: string;
+  email: string;
+};
+
+export type ChangePasswordResponse = {
+  message: string;
+  email: string;
+};
+
 export type CurrentUserResponse = {
   user: AuthUserResponse;
 };
@@ -56,6 +73,12 @@ export type RefreshResult = RefreshAccessTokenResponse & {
   refreshToken: string;
   refreshTokenExpiresAt: Date;
 };
+
+export type ForgotPasswordResult = ForgotPasswordResponse;
+
+export type ResetPasswordResult = ResetPasswordResponse;
+
+export type ChangePasswordResult = ChangePasswordResponse;
 
 export type VerifyEmailConfirmResult = {
   verified: true;

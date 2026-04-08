@@ -12,6 +12,10 @@ export function useActiveWorkspaceLabel(pathname: string) {
       return "Dashboard";
     }
 
+    if (pathname === "/app/settings/security") {
+      return "Security";
+    }
+
     const projectId = getProjectIdFromPathname(pathname);
 
     if (!projectId) {
