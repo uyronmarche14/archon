@@ -183,7 +183,7 @@ describe('AuthService', () => {
       userId: 'user-1',
       tokenHash: 'hashed-token',
       redirectPath: '/app/projects/project-1',
-      expiresAt: new Date('2026-04-08T00:00:00.000Z'),
+      expiresAt: new Date(Date.now() + 60 * 60 * 1000),
       consumedAt: null,
       createdAt: new Date('2026-04-01T00:00:00.000Z'),
       user: mockUser,
